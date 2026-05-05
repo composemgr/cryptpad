@@ -47,8 +47,8 @@ See `docker-compose.yaml` for complete list of configurable options.
 
 ## 📂 Volumes
 
-- `./rootfs/config/cryptpad` - Data storage
-- `./rootfs/data/cryptpad` - Data storage
+- `./volumes/config/cryptpad` - Data storage
+- `./volumes/data/cryptpad` - Data storage
 
 ## 🔍 Logging
 
