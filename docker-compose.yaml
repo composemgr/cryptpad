@@ -1,5 +1,6 @@
-# nginx proxy address - http://172.17.0.1:3005
+# nginx proxy address - http://172.17.0.1:3000
 
+name: cryptpad
 x-logging: &default-logging
   driver: json-file
   options:
@@ -7,28 +8,37 @@ x-logging: &default-logging
     max-file: "1"
 
 services:
-  cryptpad:
+  app:
     image: cryptpad/cryptpad:latest
+    pull_policy: always
     container_name: cryptpad-app
-    restart: unless-stopped
+    hostname: ${BASE_HOST_NAME:-$HOSTNAME}
+    restart: always
     logging: *default-logging
     networks:
       - cryptpad
     ports:
-      - "3005:3005"
+      - "172.17.0.1:3000:3000"
+      - "172.17.0.1:3001:3001"
     environment:
       TZ: ${TZ:-America/New_York}
-      PUID: ${SERVICE_USER:-1000}
-      PGID: ${SERVICE_GROUP:-1000}
+      CPAD_MAIN_DOMAIN: ${BASE_HOST_NAME:-localhost}
+      CPAD_SANDBOX_DOMAIN: ${CRYPTPAD_SANDBOX_DOMAIN:-sandbox.localhost}
+      CPAD_CONF: /cryptpad/config/config.js
+      CPAD_RESTRICT_REGISTRATION: ${CRYPTPAD_RESTRICT_REGISTRATION:-false}
     volumes:
-      - ./volumes/config/cryptpad:/config
-      - ./volumes/data/cryptpad:/data
+      - ./volumes/config/cryptpad:/cryptpad/config
+      - ./volumes/data/cryptpad/data:/cryptpad/data
+      - ./volumes/data/cryptpad/blob:/cryptpad/blob
+      - ./volumes/data/cryptpad/block:/cryptpad/block
+      - ./volumes/data/cryptpad/customize:/cryptpad/customize
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3005"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s
       timeout: 10s
       retries: 3
 
 networks:
   cryptpad:
+    name: cryptpad
     external: false
