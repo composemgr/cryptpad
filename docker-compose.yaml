@@ -17,6 +17,8 @@ services:
     logging: *default-logging
     networks:
       - cryptpad
+      - proxy
+      - cloudflare
     ports:
       - "172.17.0.1:3000:3000"
       - "172.17.0.1:3001:3001"
@@ -26,6 +28,8 @@ services:
       CPAD_SANDBOX_DOMAIN: ${CRYPTPAD_SANDBOX_DOMAIN:-sandbox.localhost}
       CPAD_CONF: /cryptpad/config/config.js
       CPAD_RESTRICT_REGISTRATION: ${CRYPTPAD_RESTRICT_REGISTRATION:-false}
+      CONTAINER_NAME: cryptpad-app
+      HOSTNAME: ${BASE_HOST_NAME:-$HOSTNAME}
     volumes:
       - ./volumes/config/cryptpad:/cryptpad/config
       - ./volumes/data/cryptpad/data:/cryptpad/data
@@ -37,8 +41,28 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    labels:
+      - 'traefik.enable=true'
+      - 'cloudflare.enable=true'
+      - 'traefik.docker.network=proxy'
+      - 'cloudflare.service=http://cryptpad-app:3000'
+      - 'cloudflare.hostname=cryptpad.${CLOUDFLARE_ZONE_NAME:-}'
+      - 'traefik.http.routers.cryptpad-app.entrypoints=http'
+      - 'traefik.http.routers.cryptpad-app-secure.tls=true'
+      - 'traefik.http.routers.cryptpad-app.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.middlewares.cryptpad-app-https-redirect.redirectscheme.scheme=https'
+      - 'traefik.http.routers.cryptpad-app.middlewares=cryptpad-app-https-redirect'
+      - 'traefik.http.routers.cryptpad-app-secure.entrypoints=https'
+      - 'traefik.http.routers.cryptpad-app-secure.rule=Host($(${BASE_HOST_NAME:-$HOSTNAME}))'
+      - 'traefik.http.routers.cryptpad-app-secure.tls.certresolver=cloudflare'
+      - 'traefik.http.routers.cryptpad-app-secure.service=cryptpad-app'
+      - 'traefik.http.services.cryptpad-app.loadbalancer.server.port=3000'
 
 networks:
   cryptpad:
     name: cryptpad
     external: false
+  proxy:
+    external: true
+  cloudflare:
+    external: true
