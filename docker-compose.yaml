@@ -21,7 +21,7 @@ services:
       - cloudflare
     ports:
       - "172.17.0.1:3000:3000"
-      - "172.17.0.1:3001:3001"
+      - "172.17.0.1:3001:3003"
     environment:
       TZ: ${TZ:-America/New_York}
       CPAD_MAIN_DOMAIN: ${BASE_HOST_NAME:-localhost}
@@ -33,6 +33,7 @@ services:
     volumes:
       - ./volumes/config/cryptpad:/cryptpad/config
       - ./volumes/data/cryptpad/data:/cryptpad/data
+      - ./volumes/data/cryptpad/datastore:/cryptpad/datastore
       - ./volumes/data/cryptpad/blob:/cryptpad/blob
       - ./volumes/data/cryptpad/block:/cryptpad/block
       - ./volumes/data/cryptpad/customize:/cryptpad/customize
